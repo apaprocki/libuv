@@ -125,6 +125,36 @@ Data types
             } netmask;
         } uv_interface_address_t;
 
+.. c:type:: uv_network_interface_t
+
+    Data type for network interfaces.
+
+    ::
+
+        typedef struct uv_network_interface_s {
+            char* name;
+            int is_up_and_running;
+            int is_loopback;
+            int is_point_to_point;
+            int is_promiscuous;
+            int has_broadcast;
+            int has_multicast;
+            char phys_addr[8]; /* Enough to store a firewire address. */
+            unsigned int phys_addr_len;
+            union {
+                struct sockaddr_in address4;
+                struct sockaddr_in6 address6;
+            } address;
+            union {
+                struct sockaddr_in broadcast4;
+                struct sockaddr_in6 broadcast6;
+            } broadcast;
+            union {
+                struct sockaddr_in netmask4;
+                struct sockaddr_in6 netmask6;
+            } netmask;
+        } uv_network_interface_t;
+
 .. c:type:: uv_passwd_t
 
     Data type for password file information.
@@ -222,13 +252,32 @@ API
 .. c:function:: int uv_interface_addresses(uv_interface_address_t** addresses, int* count)
 
     Gets address information about the network interfaces on the system. An
-    array of `count` elements is allocated and returned in `addresses`. It must
-    be freed by the user, calling :c:func:`uv_free_interface_addresses`.
+    array of `count` elements is allocated and returned in `addresses`. Only
+    includes interfaces with `INET` or `INET6` addresses. It must be freed by
+    the user, calling :c:func:`uv_free_interface_addresses`.
 
 .. c:function:: void uv_free_interface_addresses(uv_interface_address_t* addresses, int count)
 
     Free an array of :c:type:`uv_interface_address_t` which was returned by
     :c:func:`uv_interface_addresses`.
+
+.. c:function:: int uv_network_interfaces(uv_network_interface_t** interfaces, int* count)
+
+    Gets information about internet network interfaces on the system. An array
+    of `count` elements is allocated and returned in `interfaces`. Includes up,
+    down, unattached interfaces and interfaces without addresses. Missing
+    addresses are marked with a family of `AF_UNSPEC` and their contents are
+    unspecified. At least one link-layer record is returned for each interface.
+    It must be freed by the user, calling :c:func:`uv_free_network_interfaces`.
+
+	.. note::
+	    This interface will return `-ENOTSUP` until individual platform support
+        has been implemented for each supported platform.
+
+.. c:function:: void uv_free_network_interfaces(uv_network_interface_t* interfaces, int count)
+
+    Free an array of :c:type:`uv_network_interface_t` which was returned by
+    :c:func:`uv_network_interfaces`.
 
 .. c:function:: void uv_loadavg(double avg[3])
 
